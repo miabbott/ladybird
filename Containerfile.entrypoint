@@ -1,0 +1,50 @@
+FROM fedora:latest
+
+# Install build dependencies for Ladybird browser
+# Based on Documentation/BuildInstructionsLadybird.md
+RUN dnf install -y \
+    autoconf-archive \
+    automake \
+    ccache \
+    cmake \
+    curl \
+    git \
+    libdrm-devel \
+    liberation-sans-fonts \
+    libglvnd-devel \
+    libtool \
+    nasm \
+    ninja-build \
+    patchelf \
+    perl-FindBin \
+    perl-IPC-Cmd \
+    perl-lib \
+    perl-Time-Piece \
+    qt6-qtbase-devel \
+    qt6-qttools-devel \
+    qt6-qtwayland-devel \
+    tar \
+    unzip \
+    zip \
+    zlib-ng-compat-static \
+    gcc \
+    gcc-c++ \
+    python3 \
+    && dnf clean all
+
+# Verify minimum cmake version (3.25+ required)
+RUN cmake --version
+
+# Set working directory
+WORKDIR /workspace
+
+# Create entrypoint script to handle git config at runtime
+RUN echo '#!/bin/bash' > /entrypoint.sh && \
+    echo 'git config --global --add safe.directory /workspace' >> /entrypoint.sh && \
+    echo 'exec "$@"' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+# build with python script
+CMD ["./Meta/ladybird.py", "run"]
